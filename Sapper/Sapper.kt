@@ -181,7 +181,6 @@ fun main(args: Array<String>) {
     //запускаем игру
     var gameMatrix = setDefaultMatrix(matrixSize) //настройки поля
     fillBombsSet(bombsSet, bombsCount, matrixSize, bombCellVal, gameMatrix) //ставим бомбы
-    printOpenMatrix(gameMatrix)
     printGameMatrix(gameMatrix, openCellsSet) //рисуем поле
 
     //главный цикл
