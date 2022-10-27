@@ -38,32 +38,44 @@ fun setBomb(bombValue:Int, i:Int, j:Int, matrix:Array<Array<Int>>) {
     }
 }
 
-//открываем клетки вокруг текущей
-fun openCellsArround(i:Int,j:Int, bombValue:Int, matrix:Array<Array<Int>>, openCells: MutableSet<String>) {
-    //координаты смежных ячеек вокруг заданной клетки
-    val cells = mapOf(
-        0 to (i+1).toString()+";"+j.toString(), 1 to (i-1).toString()+";"+j.toString(), 2 to i.toString()+";"+(j+1).toString(),
-        3 to i.toString()+";"+(j-1).toString(), 4 to (i-1).toString()+";"+(j+1).toString(), 5 to (i+1).toString()+";"+(j+1).toString(),
-        6 to (i-1).toString()+";"+(j-1).toString(), 7 to (i+1).toString()+";"+(j-1).toString()
-    )
 
-    //записываем полученную ячейку как открытую
-    openCells.add(i.toString()+";"+j.toString())
-    if (matrix[i][j] != bombValue) {
-        for ((index, cell) in cells) {
-            try {
-                var coords = cell.toString().split(";").toTypedArray()
-                var cellValue = matrix[coords[0].toInt()][coords[1].toInt()]
-                //если в ячейка не бомба, открываем ее
-                if (cellValue != bombValue) {
-                    openCells.add(coords[0].toString()+";"+coords[1].toString())
-                }
-            } catch (e:IndexOutOfBoundsException) {null} //ничего не делаем, если вышли за пределы поля
+fun isCellValid(i:Int, j:Int, matrix: Array<Array<Int>>):Boolean {
+    try {
+        var value:Int = matrix[i][j]
+        return true
+    } catch (e: IndexOutOfBoundsException) {
+        return false
+    }
+}
+
+
+fun getCellValue(i:Int,j:Int, matrix: Array<Array<Int>>):Int {
+    return matrix[i][j];
+}
+
+//открываем клетки вокруг текущей
+fun openCellsArround(i:Int,j:Int, matrix:Array<Array<Int>>, openCells: MutableSet<String>) {
+    if (isCellValid(i, j, matrix) && !openCells.contains(i.toString() + ";" + j.toString())) {
+        if (getCellValue(i, j, matrix) == 0) { //надо открыть эту ячейку и обойти соседей
+            openCells.add(i.toString() + ";" + j.toString()) //открываем
+            //обходим соседей 8 штук
+            openCellsArround(i + 1, j, matrix, openCells)
+            openCellsArround(i - 1, j, matrix, openCells)
+            openCellsArround(i, j + 1, matrix, openCells)
+            openCellsArround(i, j - 1, matrix, openCells)
+            openCellsArround(i - 1, j + 1, matrix, openCells)
+            openCellsArround(i + 1, j + 1, matrix, openCells)
+            openCellsArround(i - 1, j - 1, matrix, openCells)
+            openCellsArround(i + 1, j - 1, matrix, openCells)
+        } else if (getCellValue(i, j, matrix) < 10){
+            //если в ячейке цифра, но не бомба) просто открываем
+            openCells.add(i.toString() + ";" + j.toString()) //открываем
         }
     }
 }
 
-//печать открытого поля
+
+//печать открытого поля в конце игры, если проиграли
 fun printOpenMatrix(matrix: Array<Array<Int>>) {
     //печать номеров столбцов
     print ("  ")
@@ -116,7 +128,7 @@ fun printGameMatrix(matrix: Array<Array<Int>>, openCells: MutableSet<String>) {
 
 //заполняет множество бомбами и расставляет их по полю
 fun fillBombsSet(bombsSet: MutableSet<String>, bombCount:Int, maxSizeValue:Int, bombDigit:Int, matrix: Array<Array<Int>>) {
-    while (bombsSet.size < bombCount-1) {
+    while (bombsSet.size < bombCount) {
         var coords = (0..maxSizeValue-1).random().toString()+";"+(0..maxSizeValue-1).random().toString()
         bombsSet.add(coords)
     }
@@ -127,10 +139,6 @@ fun fillBombsSet(bombsSet: MutableSet<String>, bombCount:Int, maxSizeValue:Int, 
     }
 }
 
-//все ли ячейки уже открыты
-fun checkEndOfGame(cellsSet: MutableSet<String>,bombsSet: MutableSet<String>, size:Int): Boolean {
-    return size*size == cellsSet.size - bombsSet.size
-}
 
 fun isMoveValid(i:Int, j:Int, cellsSet: MutableSet<String>, bombsSet: MutableSet<String>, matrix: Array<Array<Int>>):Boolean {
     if (cellsSet.contains(i.toString()+";"+j.toString())) {     //если ячейка уже открыта
@@ -157,16 +165,14 @@ fun play(cellsSet: MutableSet<String>, bombsSet: MutableSet<String>, matrix: Arr
         println("Ходите. Пробел разделяет координаты. Например 0 2")
         coords = userInput().toString().split(" ").toTypedArray()
     } while(!isMoveValid(coords[0].toInt(),coords[1].toInt(), cellsSet, bombsSet, matrix));
-    openCellsArround(coords[0].toInt(),coords[1].toInt(),10,matrix,cellsSet)
+    openCellsArround(coords[0].toInt(),coords[1].toInt(),matrix,cellsSet)
     printGameMatrix(matrix, cellsSet)
 }
 
 
 fun main(args: Array<String>) {
-    var gameIsActive:Boolean = true
     val matrixSize:Int = 10
-    val bombsCount = 6
-    val rows:Int = 10
+    val bombsCount = 10
     val bombCellVal:Int = 10 //значение в ячйке с бомбой
     var bombsSet = mutableSetOf<String>() //все установленные на поле бомбы
     var openCellsSet = mutableSetOf<String>() //все уже открытые на поле ячейки
@@ -174,21 +180,19 @@ fun main(args: Array<String>) {
 
     //запускаем игру
     var gameMatrix = setDefaultMatrix(matrixSize) //настройки поля
-    fillBombsSet(bombsSet, bombsCount, rows, bombCellVal, gameMatrix) //ставим бомбы
+    fillBombsSet(bombsSet, bombsCount, matrixSize, bombCellVal, gameMatrix) //ставим бомбы
     printOpenMatrix(gameMatrix)
     printGameMatrix(gameMatrix, openCellsSet) //рисуем поле
 
-
     //главный цикл
     while (true) {
-        //запрашиваем ход от игрока
-        play(openCellsSet, bombsSet, gameMatrix)
 
-        if (checkEndOfGame(openCellsSet,bombsSet,matrixSize)) {
+        //проверка на выигрыш
+        if (matrixSize*matrixSize - openCellsSet.size == bombsSet.size) {
             println("Вы выиграли")
-            gameIsActive = false
             exitProcess(0)
         }
+        //запрашиваем ход от игрока
+        play(openCellsSet, bombsSet, gameMatrix)
     }
-
 }
