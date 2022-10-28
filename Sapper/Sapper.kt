@@ -2,23 +2,23 @@ import java.lang.NumberFormatException
 import kotlin.system.exitProcess
 class Sapper(matrixSize:Int, bombsCount:Int) {
 
-    private val bombDigit:Int = 10
+    private val mineDigit:Int = 10
     private val emptyDigit:Int = 0
-    private val bombSymbol = "\uD83E\uDDE8"
+    private val mineSymbol = "\uD83E\uDDE8"
     private val emptySymbol = "   "
     private val closedSymbol = " \uD800\uDD02 "
 
-    private var bombsCount:Int = 0
+    private var mineCount:Int = 0
     private var matrixSize:Int = 0
-    private var bombsSet = mutableSetOf<String>() //все установленные на поле бомбы
+    private var minesSet = mutableSetOf<String>() //все установленные на поле бомбы
     private var openCellsSet = mutableSetOf<String>() //все уже открытые на поле ячейки
     private var gameMatrix = arrayOf<Array<Int>>()
 
     init {
         this.matrixSize = matrixSize
-        this.bombsCount = bombsCount
+        this.mineCount = bombsCount
         this.gameMatrix = setDefaultMatrix()
-        fillBombsSet()
+        mineGameField()
     }
 
     private fun setDefaultMatrix(): Array<Array<Int>> {
@@ -48,8 +48,8 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
             print ("${i}|")
             for (j in 0..this.matrixSize-1) {
                 if (printAsOpen) {
-                    if (this.gameMatrix[i][j] == this.bombDigit) {
-                        print(this.bombSymbol)
+                    if (this.gameMatrix[i][j] == this.mineDigit) {
+                        print(this.mineSymbol)
                     } else print(" ${this.gameMatrix[i][j]} ")
                 } else {
                     if (this.openCellsSet.contains(i.toString()+";"+j.toString())) {
@@ -66,8 +66,8 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
     }
 
     //ставим бомбу (ее цифровове обозначение) в указанные координаты и заполняем ячейки вокруг текущей кол-вом бобм рядом
-    private fun placeBomb(i:Int, j:Int) {
-        this.gameMatrix[i][j] = this.bombDigit
+    private fun placeMine(i:Int, j:Int) {
+        this.gameMatrix[i][j] = this.mineDigit
         //координаты смежных ячеек вокруг заданной клетки
         val cells = mapOf(
             0 to (i+1).toString()+";"+j.toString(), 1 to (i-1).toString()+";"+j.toString(), 2 to i.toString()+";"+(j+1).toString(),
@@ -79,7 +79,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
             try {
                 var coords = cell.toString().split(";").toTypedArray()
                 var cellValue = this.gameMatrix[coords[0].toInt()][coords[1].toInt()]
-                if (cellValue != this.bombDigit) {
+                if (cellValue != this.mineDigit) {
                     this.gameMatrix[coords[0].toInt()][coords[1].toInt()] += 1
                 }
             } catch (e:IndexOutOfBoundsException) {null} //игнорим ошибку, если вышли за пределы поля
@@ -87,15 +87,15 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
     }
 
     //первичная случайная расстановка бомб по полю
-    private fun fillBombsSet() {
-        while (this.bombsSet.size < this.bombsCount) {
+    private fun mineGameField() {
+        while (this.minesSet.size < this.mineCount) {
             var coords = (0..this.matrixSize-1).random().toString()+";"+(0..this.matrixSize-1).random().toString()
-            this.bombsSet.add(coords)
+            this.minesSet.add(coords)
         }
         //ставим бомбы по полю
-        for (bomb in this.bombsSet) {
+        for (bomb in this.minesSet) {
             var coords = bomb.toString().split(";").toTypedArray()
-            this.placeBomb(coords[0].toInt(), coords[1].toInt())
+            this.placeMine(coords[0].toInt(), coords[1].toInt())
         }
     }
 
@@ -118,11 +118,11 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
     }
 
     public fun isCellMined(i:Int,j:Int):Boolean {
-        return this.bombsSet.contains(i.toString() + ";" + j.toString())
+        return this.minesSet.contains(i.toString() + ";" + j.toString())
     }
 
     public fun isGameWin(): Boolean {
-        return ((this.matrixSize * this.matrixSize) - this.openCellsSet.size) == this.bombsSet.size
+        return ((this.matrixSize * this.matrixSize) - this.openCellsSet.size) == this.minesSet.size
 
     }
 
@@ -139,7 +139,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
                 openCellsArround(i + 1, j + 1)
                 openCellsArround(i - 1, j - 1)
                 openCellsArround(i + 1, j - 1)
-            } else if (getCellValue(i, j) < this.bombDigit){
+            } else if (getCellValue(i, j) < this.mineDigit){
                 //если в ячейке цифра, но не бомба) просто открываем
                 this.openCellsSet.add(i.toString() + ";" + j.toString())
             }
