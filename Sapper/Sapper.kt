@@ -1,6 +1,7 @@
 import java.lang.NumberFormatException
 import kotlin.system.exitProcess
-class Sapper(matrixSize:Int, bombsCount:Int) {
+
+class Sapper(matrixSize:Int, maxMinesCount:Int) {
 
     private val mineDigit:Int = 10
     private val emptyDigit:Int = 0
@@ -10,13 +11,13 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
 
     private var mineCount:Int = 0
     private var matrixSize:Int = 0
-    private var minesSet = mutableSetOf<String>() //все установленные на поле бомбы
+    private var minesSet = mutableSetOf<String>() //все установленные на поле мины
     private var openCellsSet = mutableSetOf<String>() //все уже открытые на поле ячейки
     private var gameMatrix = arrayOf<Array<Int>>()
 
     init {
         this.matrixSize = matrixSize
-        this.mineCount = bombsCount
+        this.mineCount = maxMinesCount
         this.gameMatrix = setDefaultMatrix()
         mineGameField()
     }
@@ -65,7 +66,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
         }
     }
 
-    //ставим бомбу (ее цифровове обозначение) в указанные координаты и заполняем ячейки вокруг текущей кол-вом бобм рядом
+    //ставим мину (ее цифровове обозначение) в указанные координаты и заполняем ячейки вокруг текущей кол-вом бобм рядом
     private fun placeMine(i:Int, j:Int) {
         this.gameMatrix[i][j] = this.mineDigit
         //координаты смежных ячеек вокруг заданной клетки
@@ -86,7 +87,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
         }
     }
 
-    //первичная случайная расстановка бомб по полю
+    //первичная случайная расстановка мин по полю
     private fun mineGameField() {
         while (this.minesSet.size < this.mineCount) {
             var coords = (0..this.matrixSize-1).random().toString()+";"+(0..this.matrixSize-1).random().toString()
@@ -140,7 +141,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
                 openCellsArround(i - 1, j - 1)
                 openCellsArround(i + 1, j - 1)
             } else if (getCellValue(i, j) < this.mineDigit){
-                //если в ячейке цифра, но не бомба) просто открываем
+                //если в ячейке цифра, но не мина) просто открываем
                 this.openCellsSet.add(i.toString() + ";" + j.toString())
             }
         }
@@ -178,8 +179,8 @@ fun isMoveValid(i:Int, j:Int, sapper: Sapper):Boolean {
     if (sapper.isCellOpen(i,j)) {     //если ячейка уже открыта
         println("Ячейка уже окрыта. Давайте еще")
         return false
-    } else if (sapper.isCellMined(i,j)) { //если в ячейке бомба
-        println("В ячейке бомба, вы проиграли(")
+    } else if (sapper.isCellMined(i,j)) { //если в ячейке мина
+        println("В ячейке мина, вы проиграли(")
         sapper.printMatrix(true)
         exitProcess(0)
     } else {
