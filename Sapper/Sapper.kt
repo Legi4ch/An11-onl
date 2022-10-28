@@ -26,7 +26,7 @@ class Sapper(matrixSize:Int, bombsCount:Int) {
         for (i in 0..this.matrixSize-1) {
             var row = arrayOf<Int>()
             for (j in 0..this.matrixSize-1) {
-                row += 0
+                row += this.emptyDigit
             }
             matrix += row
         }
